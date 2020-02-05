@@ -23,8 +23,8 @@ class WelcomeController(Controller):
         return view.render('welcome')
 
     def auth(self, request: Request, socialite: Socialite):
-        return socialite.driver('auth').redirect()
+        return socialite.driver(request.param('provider')).redirect()
 
     def callback(self, request: Request, socialite: Socialite):
-        user = socialite.driver('auth').user()
+        user = socialite.driver(request.param('provider')).user()
         return request.redirect('/')
