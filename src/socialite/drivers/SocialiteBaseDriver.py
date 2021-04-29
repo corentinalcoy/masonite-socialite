@@ -5,7 +5,6 @@ from masonite.request import Request
 from social_core.actions import do_auth
 from social_core.exceptions import MissingBackend
 
-from socialite.actions import do_complete
 from socialite.exceptions import InvalidRedirectUriError
 from socialite.helpers import load_strategy, load_backend, get_config
 
@@ -20,12 +19,12 @@ class SocialiteBaseDriver(BaseDriver):
         return do_auth(self.request.backend)
 
     def _complete(self):
-        user_formatted_data, response = do_complete(self.request.backend)
-        user_formatted_data["access_token"] = response.get("access_token", "")
-        user_formatted_data['uid'] = response.get("id", "")
-        user_formatted_data["raw_data"] = response
-        user_formatted_data['provider'] = self.request.backend.name.split('-')[0]
-        user_info = namedtuple("User", user_formatted_data.keys())(*user_formatted_data.values())
+        user_data, response = self.request.backend.complete(user=None)
+        user_data["access_token"] = response.get("access_token", "")
+        user_data['uid'] = response.get("id", "")
+        user_data["raw_data"] = response
+        user_data['provider'] = self.request.backend.name.split('-')[0]
+        user_info = namedtuple("User", user_data.keys())(*user_data.values())
         return user_info
 
     def redirect(self):
@@ -53,7 +52,8 @@ class SocialiteBaseDriver(BaseDriver):
         if '-' in self.name:
             self.backend_str = "_".join(self.name.split("-"))
         return self._format_redirect(get_config(
-            'socialite.SOCIAL_AUTH_{provider_name}_REDIRECT_URI'.format(provider_name=self.backend_str.upper())))
+            'socialite.SOCIAL_AUTH_{provider_name}_REDIRECT_URI'.format(provider_name=self.backend_str.upper()))
+        )
 
     def _format_redirect(self, redirect: str):
         if not redirect:

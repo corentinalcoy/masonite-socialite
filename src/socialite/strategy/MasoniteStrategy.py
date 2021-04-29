@@ -40,42 +40,35 @@ class MasoniteStrategy(BaseStrategy):
         return self.tpl.render_string(html=content, context='')
 
     def request_data(self, merge=True):
-        if not merge:
-            return {}
-        return self.request.all()
+        return self.request.all() if merge else {}
 
     def request_host(self):
         return get_config('application.URL')
 
     def session_get(self, name, default=None):
         value = self.session.get(name)
-        if value:
-            return value['0']
-        return default
+        return value if value else default
 
     def session_set(self, name, value):
-        self.session.set(name, {0: value})
+        self.session.set(name, value)
         if hasattr(self.session, 'modified'):
-            self.session.set('modified', {0: True})
+            self.session.set('modified', True)
         return value
 
     def session_pop(self, name):
-        self.session.set(name, {0: None})
+        self.session.pop(name)
 
     def build_absolute_uri(self, path=None):
         host_url = self.request_host()
         if self.request:
             if not host_url.endswith('/'):
                 host_url += '/'
-            return build_absolute_uri(host_url, path)
-        else:
-            return path
+            path = build_absolute_uri(host_url, path)
+        return path
 
     def request_is_secure(self):
         host_url = self.request_host()
-        if host_url.startswith('https://'):
-            return True
-        return False
+        return host_url.startswith('https://')
 
     def request_path(self):
         return self.request.path
